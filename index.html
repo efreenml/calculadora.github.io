@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Formula</title>
+</head>
+<body>
+    <div class="center">
+        <div class = "block">
+            <div>
+                <label for="large">large</label><br>
+                <input type="number" name="large" id="large" >
+            </div>
+            <div>
+                <label for="diameter">diameter</label><br>
+                <input type="number" name="diameter" id="diameter">
+            </div>
+            <div>
+                <label for="flow">caudal</label><br>
+                <input type="number" name="flow" id="flow">
+            </div>
+            <div>
+                <label for="materialRoughness">rugosidad de material:</label><br>
+                <input type="number" name="materialRoughness" id="materialRoughness">
+            </div>    
+        <div>
+            <label for="k">k</label><br>
+            <input type="number" name="k" id="k">
+        </div>
+        <div>
+            <button onclick="Calculate()"> calcularA </button>
+            <p id = "reynolds">El valor de Reynolds es: . . . . . . </p>
+            <p id = "flujo">El tipo de flujo es:. . . . . . </p>
+            <p id = "a-value">El valor de perdida primaria es:  . . . . . </p>
+            <p id = "v-value">El valor de perdida primaria es:  . . . . . </p>
+        </div>
+    
+    </div>
+</div>
+
+
+
+<script>
+function Calculate(){
+    let large = parseFloat(document.getElementById("large").value);
+    let diameter = parseFloat(document.getElementById("diameter").value);
+    let flow = parseFloat(document.getElementById("flow").value);
+    let materialRoughness = parseFloat(document.getElementById("materialRoughness").value);
+    let k = parseFloat(document.getElementById("k").value);
+    console.log(large, diameter, flow, materialRoughness, k);
+
+    if(isNaN(large) || isNaN(diameter) || isNaN(flow) || isNaN(materialRoughness) || isNaN(k)){
+        alert("Valor(s) invalidos");
+        document.getElementById("flujo").innerHTML = "El tipo de flujo es: " + "Verificar valores";
+        document.getElementById("a-value").innerHTML = "El valor de perdida primaria es: " + "Verificar valores";
+        document.getElementById("v-value").innerHTML = "El valor de perdida secundaria es: " + "Verificar valores";
+        return;
+    }
+    main(); 
+}
+
+
+function main() {
+    let large = parseFloat(document.getElementById("large").value);
+    let diameter = parseFloat(document.getElementById("diameter").value);
+    let flow = parseFloat(document.getElementById("flow").value);
+    let materialRoughness = parseFloat(document.getElementById("materialRoughness").value);
+    let k = parseFloat(document.getElementById("k").value);
+    
+    let A = calculateA(large, diameter);
+    let V = calculateV(A);
+    let V2 = Math.pow(V, 2);
+
+    let reynolds = calculateReynolds(V, diameter);
+    document.getElementById("reynolds").innerHTML = "El valor de Reynolds es: " + reynolds;
+    let f = conditional(reynolds);
+    let HL = primaryLoss(f, large, diameter, V);
+    let HV = secondLoss(k, V2);
+
+    alert("Las perdidas primarias son:" + HL);
+    alert("Las perdidas secundarias son:" + HV);
+
+    document.getElementById("a-value").innerHTML = "El valor de perdida primaria es: " + HL;
+    document.getElementById("v-value").innerHTML = "El valor de perdida secundaria es: " + HV;
+
+}
+
+function calculateA(large, diameter) {
+
+    let d2 = Math.pow(diameter, 2);
+    let pi = Math.PI;
+    
+    let A = d2 * pi / 4;
+    return A;
+    
+}
+function calculateV(A) {
+    let flow = parseFloat(document.getElementById("flow").value);
+    let V = flow / A;
+    return V;
+
+    
+}
+function calculateReynolds(V, diameter) {    
+    let viscosity = .000018;
+    let reynolds = diameter * V / viscosity;
+
+    return reynolds;
+
+}
+function case2000(reynolds){
+    let f = 64 / reynolds;
+    return f;
+}
+
+function case4000(reynolds){
+let f = 0.316 / Math.pow(reynolds, 1/4);
+
+return f;
+
+}
+
+function otherCase(reynolds){
+    let diameter = parseFloat(document.getElementById("diameter").value);
+    let materialRoughness = parseFloat(document.getElementById("materialRoughness").value);
+
+    let logg = Math.log(1 / (3.7 * (diameter / materialRoughness)));
+
+    let denominator = (5.74 / Math.pow(reynolds, 0.9)) + logg;
+
+    let f = 0.25 / Math.pow(denominator, 2);
+
+    return f;
+
+}
+function conditional(reynolds) {
+    let f;
+    if(reynolds < 2000){
+        document.getElementById("flujo").innerHTML = "El tipo de flujo es: " + "Laminar";
+        f = case2000(reynolds);
+
+    }else if(reynolds > 4000){
+        document.getElementById("flujo").innerHTML = "El tipo de flujo es: " + "Turbulento";
+        f = case4000(reynolds);
+
+    }else {
+        document.getElementById("flujo").innerHTML = "El tipo de flujo es: " + "Transición";
+        f = otherCase(reynolds);
+    }
+    return f;
+
+
+}
+
+function primaryLoss(f, large, diameter, v) {
+    let v2 = Math.pow(v, 2);
+    let HL = (f * large * v2)/ (2* 9.81 * diameter);
+    return HL;
+}
+
+function secondLoss(k, V2){
+    console.log(k, V2);
+    let HV = k * (V2 / (2*9.81));
+    return HV;
+}
+
+
+
+</script>
+
+</body>
+</html>
